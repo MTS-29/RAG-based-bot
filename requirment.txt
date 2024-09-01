@@ -1,0 +1,10 @@
+transformers
+sentence-transformers
+pinecone-client
+python-dotenv
+langchain
+langchain-core
+langchain-community
+docx2txt
+langchain-pinecone
+langchain_openai
