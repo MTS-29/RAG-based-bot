@@ -6,11 +6,8 @@ from pinecone import Pinecone, ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import OpenAIEmbeddings
 from langchain_openai import ChatOpenAI
-from langchain.chains.question_answering import load_qa_chain
-import warnings
+from langchain_core.prompts import ChatPromptTemplate
 from constants import INDEX_NAME
-
-warnings.filterwarnings("ignore")
 
 # Loading the env variables
 load_dotenv(find_dotenv(), override=True)
@@ -60,7 +57,6 @@ def chuck_data(data, chunk_size=600, chunk_overlap=50):
 
 # inserting embeddings into the Pinecone Index
 def upsert_chunks_to_pinecone(data_chunks, embedding_model, index_name_pinecone, index_flag):
-
     # Check if document is already indexed
     if not index_flag:
         print(f"************** Going to add {len(data_chunks)} chunks to Pinecone **************")
@@ -77,10 +73,25 @@ def upsert_chunks_to_pinecone(data_chunks, embedding_model, index_name_pinecone,
 
 # Querying with a search text from the vectors inside pinecone index
 def query_llm(search_query, index_vector_store):
+
     llm = ChatOpenAI(temperature=0, openai_api_key=os.environ['OPENAI_API_KEY'])
-    chain = load_qa_chain(llm, chain_type="stuff")
+
     docs = index_vector_store.similarity_search(query=search_query)
-    return chain.invoke({"input_documents": docs, 'question': search_query}), 200
+
+    chat_template = ChatPromptTemplate.from_messages([
+        ("system", """After reading the document, give a clear and fact-based answer to the question. 
+        Each question stands alone. Your answer should use info from the document.
+        Don't add anything that's not in the text or make guesses about what's not there. 
+        {docs}"""),
+        ("human", "{user_input}")
+    ])
+
+    prompt = chat_template.invoke({
+        "user_input": search_query,
+        "docs": docs
+    })
+    response = llm.invoke(prompt)
+    return response
 
 
 if __name__ == "__main__":
@@ -98,4 +109,4 @@ if __name__ == "__main__":
     query = input("Enter your query: ")
     answer = query_llm(query, vector_store_index)
 
-    print("Answer: ", answer[0]['output_text'])
+    print(answer.content)
