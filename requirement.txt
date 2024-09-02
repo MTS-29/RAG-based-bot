@@ -8,3 +8,5 @@ langchain-community
 docx2txt
 langchain-pinecone
 langchain_openai
+dspy-ai
+dspy-ai[pinecone]
