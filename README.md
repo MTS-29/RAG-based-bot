@@ -2,7 +2,7 @@
 
 ## Dependecies Installation
 All required libaries are added in requirment.txt file
-Command - python3 -m pip install -r requirements. txt 
+Command - python3 -m pip install -r requirement.txt 
 
 ## Add API Keys in .env file before executing the file
 

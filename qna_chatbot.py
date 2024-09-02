@@ -1,6 +1,5 @@
 from dotenv import load_dotenv, find_dotenv
 import os
-import logging
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from pinecone import Pinecone, ServerlessSpec
@@ -16,10 +15,6 @@ warnings.filterwarnings("ignore")
 # Loading the env variables
 load_dotenv(find_dotenv(), override=True)
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
 # Initialization of Pinecone database
 pc = Pinecone(api_key=os.environ.get('PINECONE_API_KEY'))
 
@@ -31,11 +26,11 @@ embedding = OpenAIEmbeddings(model="text-embedding-3-small")
 def pinecone_index_creation(embedding_model):
     if INDEX_NAME in pc.list_indexes().names():
         index_flag = True
-        logger.info("Index already exists")
+        print("************** Index already exists **************")
         index_vector_store = Pinecone(index_name=INDEX_NAME, embedding=embedding_model)
     else:
         index_flag = False
-        logger.info("Creating new Pinecone Index")
+        print("************** Creating new Pinecone Index **************")
         pc.create_index(
             name=INDEX_NAME,
             dimension=1536,
@@ -68,11 +63,11 @@ def upsert_chunks_to_pinecone(data_chunks, embedding_model, index_name_pinecone,
 
     # Check if document is already indexed
     if not index_flag:
-        logger.info(f"Going to add {len(data_chunks)} chunks to Pinecone")
+        print(f"************** Going to add {len(data_chunks)} chunks to Pinecone **************")
         index_vector_store = PineconeVectorStore.from_documents(
             data_chunks, embedding_model, index_name=index_name_pinecone
         )
-        logger.info("****Loading to vectorstore done ***")
+        print("************** Loading to vectorstore done **************")
         return index_vector_store
     else:
         index_vector_store = PineconeVectorStore.from_existing_index(index_name=index_name_pinecone,
